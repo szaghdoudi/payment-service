@@ -96,9 +96,9 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          IMAGE=ghcr.io/${{ github.repository }}/payment-service
+          IMAGE=ghcr.io/${{ github.repository }}
           SHA=$(git rev-parse --short HEAD)
-          docker build -t $IMAGE:latest -t $IMAGE:$SHA -f payment-service/Dockerfile payment-service
+          docker build -t $IMAGE:latest -t $IMAGE:$SHA -f Dockerfile .
           docker push $IMAGE:latest
           docker push $IMAGE:$SHA
 

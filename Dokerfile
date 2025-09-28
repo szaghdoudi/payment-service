@@ -1,4 +1,0 @@
-From eclispe-temurin:25-jre
-Workdir /app
-Copy target/payment-service.jar app.jar
-EntryPoint ["java","-jar","app.jar"]
