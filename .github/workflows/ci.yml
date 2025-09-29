@@ -115,8 +115,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          OWNER=${{ github.repository_owner }}             # <--- use the repo owner
-          IMAGE=ghcr.io/$OWNER/${{ github.repository }}
+          IMAGE=ghcr.io/${{ github.repository }}
           SHA=$(git rev-parse --short HEAD)
           docker build -t $IMAGE:latest -t $IMAGE:$SHA -f Dockerfile .
           docker push $IMAGE:latest
