@@ -83,6 +83,9 @@ jobs:
           if-no-files-found: 'warn'
 
   docker-build:
+    permissions:
+      contents: read
+      packages: write
     needs: integration-tests
     runs-on: ubuntu-latest
     steps:
@@ -112,7 +115,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          IMAGE=ghcr.io/${{ github.repository }}
+          OWNER=${{ github.repository_owner }}             # <--- use the repo owner
+          IMAGE=ghcr.io/$OWNER/${{ github.repository }}
           SHA=$(git rev-parse --short HEAD)
           docker build -t $IMAGE:latest -t $IMAGE:$SHA -f Dockerfile .
           docker push $IMAGE:latest

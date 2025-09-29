@@ -1,4 +1,4 @@
 FROM eclipse-temurin:25-jre
-Workdir /app
+WORKDIR /app
 COPY target/payment-service-*.jar app.jar
-EntryPoint ["java","-jar","app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
