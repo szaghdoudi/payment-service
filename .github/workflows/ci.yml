@@ -88,11 +88,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download build Jars
-        uses: actions/download-artifact@v4
-        with:
-          name: jars
-          path: target
+   #   - name: Download build Jars
+   #     uses: actions/download-artifact@v4
+   #     with:
+   #       name: jars
+   #       path: target
 
       - name: Show current directory
         run: pwd
