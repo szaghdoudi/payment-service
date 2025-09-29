@@ -94,6 +94,15 @@ jobs:
           name: jars
           path: target
 
+      - name: Show current directory
+        run: pwd
+
+      - name: List files (top level)
+        run: ls -al
+
+      - name: List files recursively
+        run: ls -R | head -n 200
+
       - name: Log in to GitHub Container Registery
         uses: docker/login-action@v3
         with:
