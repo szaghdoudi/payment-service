@@ -3,9 +3,15 @@ on:
   push:
     branches:
       - develop
+      - 'feature/**'
   pull_request:
     branches:
       - develop
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
 
 jobs:
   build:
@@ -13,7 +19,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Temurin JDK 25 (EA)
         uses: actions/setup-java@v4
         with:
@@ -83,6 +88,7 @@ jobs:
           if-no-files-found: 'warn'
 
   docker-build:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feature/'))
     permissions:
       contents: read
       packages: write
@@ -114,10 +120,27 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
-          IMAGE=ghcr.io/${{ github.repository }}
-          SHA=$(git rev-parse --short HEAD)
-          docker build -t $IMAGE:latest -t $IMAGE:$SHA -f Dockerfile .
-          docker push $IMAGE:latest
-          docker push $IMAGE:$SHA
+          set -eo pipefail
 
+          IMAGE="ghcr.io/${{ github.repository }}"
+          SHA=$(git rev-parse --short HEAD)
+
+          TAGS=("$IMAGE:$SHA")
+
+          if [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
+            TAGS+=("$IMAGE:latest")
+          else
+            SANITIZED_BRANCH=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-')
+            SANITIZED_BRANCH=${SANITIZED_BRANCH#-}
+            SANITIZED_BRANCH=${SANITIZED_BRANCH%-}
+            TAGS+=("$IMAGE:${SANITIZED_BRANCH}")
+          fi
+
+          docker build $(printf ' -t %q' "${TAGS[@]}") -f Dockerfile .
+
+          for tag in "${TAGS[@]}"; do
+            docker push "$tag"
+          done
