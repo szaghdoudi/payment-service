@@ -2,11 +2,13 @@ name: CI - Build and Test
 on:
   push:
     branches:
+      - master
       - develop
       - 'feature/**'
   pull_request:
     branches:
       - develop
+      - master
     types:
       - opened
       - reopened
@@ -88,7 +90,7 @@ jobs:
           if-no-files-found: 'warn'
 
   docker-build:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feature/'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/feature/'))
     permissions:
       contents: read
       packages: write
@@ -130,14 +132,23 @@ jobs:
 
           TAGS=("$IMAGE:$SHA")
 
-          if [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
-            TAGS+=("$IMAGE:latest")
-          else
-            SANITIZED_BRANCH=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-')
-            SANITIZED_BRANCH=${SANITIZED_BRANCH#-}
-            SANITIZED_BRANCH=${SANITIZED_BRANCH%-}
-            TAGS+=("$IMAGE:${SANITIZED_BRANCH}")
-          fi
+          case "${GITHUB_REF}" in
+            "refs/heads/master")
+              TAGS+=("$IMAGE:latest" "$IMAGE:master")
+              ;;
+            "refs/heads/develop")
+              TAGS+=("$IMAGE:develop")
+              ;;
+            *)
+              SANITIZED_BRANCH=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-')
+              SANITIZED_BRANCH=${SANITIZED_BRANCH#-}
+              SANITIZED_BRANCH=${SANITIZED_BRANCH%-}
+              if [[ -z "${SANITIZED_BRANCH}" ]]; then
+                SANITIZED_BRANCH="branch"
+              fi
+              TAGS+=("$IMAGE:${SANITIZED_BRANCH}")
+              ;;
+          esac
 
           docker build $(printf ' -t %q' "${TAGS[@]}") -f Dockerfile .
 
